@@ -6,7 +6,7 @@ import streamlit as st
 import os
 
 # Your Google Books API key
-api_key = "AIzaSyBtmQTeAb2Q2MCm6AF90KT8NgHBMHAAW9w"
+api_key = NONE
 
 # Define paths for writable directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
