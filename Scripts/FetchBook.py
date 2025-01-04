@@ -4,9 +4,12 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 import os
+from dotenv import load_dotenv
 
-# Your Google Books API key
-api_key = "AIzaSyBtmQTeAb2Q2MCm6AF90KT8NgHBMHAAW9w"
+def configure():
+    load_dotenv()
+
+api_key = os.getenv('API_KEY')
 
 # Define paths for writable directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
