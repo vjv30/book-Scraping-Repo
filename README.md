@@ -21,7 +21,7 @@ Make sure you have the following Python libraries installed:
 You can install the required libraries by running:
 
 ```bash
-pip install requests pandas streamlit
+pip install requests pandas streamlit matplotlib seaborn plotly
 ```
 
 you can run this code by using your own API Key and then run using
