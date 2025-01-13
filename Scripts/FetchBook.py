@@ -1,9 +1,12 @@
+import streamlit as st 
 import requests
 import json
 import sqlite3
 import pandas as pd
-import streamlit as st
 import os
+import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 from dotenv import load_dotenv
 
 def configure():
@@ -11,7 +14,6 @@ def configure():
 
 api_key = os.getenv('API_KEY')
 
-# Define paths for writable directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILEPATH = os.path.join(BASE_DIR, "book_data.db")
 JSON_FILEPATH = os.path.join(BASE_DIR, "book_data.json")
@@ -46,74 +48,71 @@ def save_to_sql(book_data, keyword, DB_FILEPATH):
     conn = sqlite3.connect(DB_FILEPATH)
     cursor = conn.cursor()
 
-    # Create the table if it doesn't exist
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS books (
-            book_id TEXT PRIMARY KEY,
-            search_key TEXT,
-            book_title TEXT,
-            book_subtitle TEXT,
-            book_authors TEXT,
-            book_description TEXT,
-            industryIdentifiers TEXT,
-            pageCount INT,
-            categories TEXT,
-            language TEXT,
-            imageLinks TEXT,
-            ratingsCount INT,
-            averageRating REAL,
-            country TEXT,
-            saleability TEXT,
-            isEbook BOOLEAN,
-            amount_listPrice REAL,
-            currencyCode_listPrice TEXT,
-            amount_retailPrice REAL,
-            currencyCode_retailPrice TEXT,
-            buyLink TEXT,
-            year TEXT
+            Book_Id TEXT PRIMARY KEY,
+            Search_Key TEXT,
+            Book_Title TEXT,
+            Book_Subtitle TEXT,
+            Book_Authors TEXT,
+            Book_Description TEXT,
+            IndustryIdentifiers TEXT,
+            PageCount INT,
+            Categories TEXT,
+            Language TEXT,
+            ImageLinks TEXT,
+            RatingsCount INT,
+            AverageRating REAL,
+            Country TEXT,
+            Saleability TEXT,
+            IsEbook BOOLEAN,
+            Amount_ListPrice REAL,
+            CurrencyCode_ListPrice TEXT,
+            Amount_RetailPrice REAL,
+            CurrencyCode_RetailPrice TEXT,
+            BuyLink TEXT,
+            Year TEXT
         )
     """)
-
-    # Clear all old data from the table
     cursor.execute("DELETE FROM books")
 
     for item in book_data:
         volume_info = item.get("volumeInfo", {})
         sale_info = item.get("saleInfo", {})
         try:
-            book_id = item["id"]
-            book_title = volume_info.get("title", "")
-            book_subtitle = volume_info.get("subtitle", "")
-            book_authors = ", ".join(volume_info.get("authors", []))
-            book_description = volume_info.get("description", "")
-            industryIdentifiers = json.dumps(volume_info.get("industryIdentifiers", []))
-            pageCount = volume_info.get("pageCount", None)
-            categories = ", ".join(volume_info.get("categories", []))
-            language = volume_info.get("language", "")
-            imageLinks = json.dumps(volume_info.get("imageLinks", {}))
-            ratingsCount = volume_info.get("ratingsCount", None)
-            averageRating = volume_info.get("averageRating", None)
-            country = sale_info.get("country", "")
-            saleability = sale_info.get("saleability", "")
-            isEbook = sale_info.get("isEbook", None)
-            amount_listPrice = sale_info.get("listPrice", {}).get("amount", None)
-            currencyCode_listPrice = sale_info.get("listPrice", {}).get("currencyCode", "")
-            amount_retailPrice = sale_info.get("retailPrice", {}).get("amount", None)
-            currencyCode_retailPrice = sale_info.get("retailPrice", {}).get("currencyCode", "")
-            buyLink = sale_info.get("buyLink", "")
-            year = volume_info.get("publishedDate", "")
+            Book_Id = item["id"]
+            Book_Title = volume_info.get("title", "")
+            Book_Subtitle = volume_info.get("subtitle", "")
+            Book_Authors = ", ".join(volume_info.get("authors", []))
+            Book_Description = volume_info.get("description", "")
+            IndustryIdentifiers = json.dumps(volume_info.get("industryIdentifiers", []))
+            PageCount = volume_info.get("pageCount", None)
+            Categories = ", ".join(volume_info.get("categories", []))
+            Language = volume_info.get("language", "")
+            ImageLinks = json.dumps(volume_info.get("imageLinks", {}))
+            RatingsCount = volume_info.get("ratingsCount", None)
+            AverageRating = volume_info.get("averageRating", None)
+            Country = sale_info.get("country", "")
+            Saleability = sale_info.get("saleability", "")
+            IsEbook = sale_info.get("isEbook", None)
+            Amount_ListPrice = sale_info.get("listPrice", {}).get("amount", None)
+            CurrencyCode_ListPrice = sale_info.get("listPrice", {}).get("currencyCode", "")
+            Amount_RetailPrice = sale_info.get("retailPrice", {}).get("amount", None)
+            CurrencyCode_RetailPrice = sale_info.get("retailPrice", {}).get("currencyCode", "")
+            BuyLink = sale_info.get("buyLink", "")
+            Year = volume_info.get("publishedDate", "")
 
             cursor.execute("""
                 INSERT OR IGNORE INTO books (
-                    book_id, search_key, book_title, book_subtitle, book_authors, book_description, 
-                    industryIdentifiers, pageCount, categories, language, imageLinks, ratingsCount, 
-                    averageRating, country, saleability, isEbook, amount_listPrice, currencyCode_listPrice, 
-                    amount_retailPrice, currencyCode_retailPrice, buyLink, year
+                    Book_Id, Search_Key, Book_Title, Book_Subtitle, Book_Authors, Book_Description, 
+                    IndustryIdentifiers, PageCount, Categories, Language, ImageLinks, RatingsCount, 
+                    AverageRating, Country, Saleability, IsEbook, Amount_ListPrice, CurrencyCode_ListPrice, 
+                    Amount_RetailPrice, CurrencyCode_RetailPrice, BuyLink, Year
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (book_id, keyword, book_title, book_subtitle, book_authors, book_description,
-                  industryIdentifiers, pageCount, categories, language, imageLinks, ratingsCount,
-                  averageRating, country, saleability, isEbook, amount_listPrice, currencyCode_listPrice,
-                  amount_retailPrice, currencyCode_retailPrice, buyLink, year))
+            """, (Book_Id, keyword, Book_Title, Book_Subtitle, Book_Authors, Book_Description,
+                  IndustryIdentifiers, PageCount, Categories, Language, ImageLinks, RatingsCount,
+                  AverageRating, Country, Saleability, IsEbook, Amount_ListPrice, CurrencyCode_ListPrice,
+                  Amount_RetailPrice, CurrencyCode_RetailPrice, BuyLink, Year))
         except KeyError as e:
             print(f"Error inserting book {item.get('id', '')}: Missing key {e}")
             continue
@@ -126,14 +125,13 @@ def load_books_from_sql(keyword, DB_FILEPATH):
     conn = sqlite3.connect(DB_FILEPATH)
     cursor = conn.cursor()
 
-    # Select only the columns you need
     cursor.execute("""
-        SELECT book_id, search_key, book_title, book_subtitle, book_authors, 
-               book_description, industryIdentifiers, pageCount, categories, 
-               language, imageLinks, ratingsCount, averageRating, country, 
-               saleability, isEbook, amount_listPrice, currencyCode_listPrice, 
-               amount_retailPrice, currencyCode_retailPrice, buyLink, year
-        FROM books WHERE search_key = ?
+        SELECT Book_Id, Search_Key, Book_Title, Book_Subtitle, Book_Authors, 
+               Book_Description, IndustryIdentifiers, PageCount, Categories, 
+               Language, ImageLinks, RatingsCount, AverageRating, Country, 
+               Saleability, IsEbook, Amount_ListPrice, CurrencyCode_ListPrice, 
+               Amount_RetailPrice, CurrencyCode_RetailPrice, BuyLink, Year
+        FROM books WHERE Search_Key = ?
     """, (keyword,))
 
     rows = cursor.fetchall()
@@ -141,270 +139,292 @@ def load_books_from_sql(keyword, DB_FILEPATH):
     return rows
 
 
-# Streamlit app logic
-st.sidebar.title("vjv Book Scraping App")
-page = st.sidebar.radio("Menu", ["Search Books", "Data Analyzing"])
+st.set_page_config(page_title=" vjv BookScape Explorer", layout="wide")
+st.sidebar.title("📚 vjv BookScape Explorer")
+with st.sidebar:
+    menu_option = st.selectbox("Menu", ["Search Books", "Analyze Data"])
 
-if page == "Search Books":
-    st.title("Book Search")
+if menu_option == "Search Books":
+    st.header("🔍 Search Books")
 
-    keyword = st.text_input("Enter a keyword:")
-    if st.button("Search"):
-        if keyword:
-            with st.spinner("Fetching data..."):
-                books = get_books(keyword, api_key)
-            if books:
-                st.success(f"Found {len(books)} books for keyword: {keyword}")
+    with st.form("search_form"):
+        keyword = st.text_input("Enter a keyword to search for books:")
+        submit_button = st.form_submit_button(label="Search")
 
-                # Save to JSON file
-                try:
-                    with open(JSON_FILEPATH, "w") as f:
-                        json.dump(books, f, indent=4)
-                    st.success(f"Saved data to JSON at {JSON_FILEPATH}")
-                except Exception as e:
-                    st.error(f"Error saving JSON: {e}")
+    if submit_button and keyword:
+        with st.spinner("Fetching data..."):
+            books = get_books(keyword, api_key)
+        if books:
+            st.success(f"Found {len(books)} books for the keyword: {keyword}")
 
-                # Save to SQLite
-                save_to_sql(books, keyword, DB_FILEPATH)
-                st.success(f"Saved data to SQLite database at {DB_FILEPATH}")
+            # Save to JSON
+            try:
+                with open(JSON_FILEPATH, "w") as f:
+                    json.dump(books, f, indent=4)
+                st.success(f"Saved data to JSON at {JSON_FILEPATH}")
+            except Exception as e:
+                st.error(f"Error saving JSON: {e}")
 
-                # Display data from the database
-                books_from_db = load_books_from_sql(keyword, DB_FILEPATH)
-                df = pd.DataFrame(books_from_db, columns=[
-                    "book_id", "search_key", "book_title", "book_subtitle", "book_authors",
-                    "book_description", "industryIdentifiers", "pageCount", "categories", 
-                    "language", "imageLinks", "ratingsCount", "averageRating", "country", 
-                    "saleability", "isEbook", "amount_listPrice", "currencyCode_listPrice", 
-                    "amount_retailPrice", "currencyCode_retailPrice", "buyLink", "year"
-                ])
-                st.dataframe(df)
-            else:
-                st.warning("No books found.")
+            # Save to SQLite
+            save_to_sql(books, keyword, DB_FILEPATH)
+            st.success(f"Saved data to SQLite database at {DB_FILEPATH}")
+
+            # Load and display results
+            books_from_db = load_books_from_sql(keyword, DB_FILEPATH)
+            df = pd.DataFrame(books_from_db, columns=[
+                "Book_Id", "Search_Key", "Book_Title", "Book_Subtitle", "Book_Authors",
+                "Book_Description", "IndustryIdentifiers", "PageCount", "Categories", 
+                "Language", "ImageLinks", "RatingsCount", "AverageRating", "Country", 
+                "Saleability", "IsEbook", "Amount_ListPrice", "CurrencyCode_ListPrice", 
+                "Amount_RetailPrice", "CurrencyCode_RetailPrice", "BuyLink", "Year"
+            ])
+            
+            st.dataframe(df)
         else:
-            st.warning("Please enter a keyword.")
+            st.warning("No books found for the given keyword.")
 
-elif page == "Data Analyzing":
-    st.title("SQL Query Analysis")
+elif menu_option == "Analyze Data":
+    st.markdown("### Explore Book Insights")
 
-    # Define query options
-    query_options = [
-        "Check Availability of eBooks vs Physical Books",
-        "Find the Publisher with the Most Books Published",
-        "Identify the Publisher with the Highest Average Rating",
-        "Get the Top 5 Most Expensive Books by Retail Price",
-        "Find Books Published After 2010 with at Least 500 Pages",
-        "List Books with Discounts Greater than 20%",
-        "Find the Average Page Count for eBooks vs Physical Books",
-        "Find the Top 3 Authors with the Most Books",
-        "List Publishers with More than 10 Books",
-        "Find the Average Page Count for Each Category",
-        "Retrieve Books with More than 3 Authors",
-        "Books with Ratings Count Greater Than the Average",
-        "Books with the Same Author Published in the Same Year",
-        "Books with a Specific Keyword in the Title",
-        "Year with the Highest Average Book Price",
-        "Count Authors Who Published 3 Consecutive Years",
-        "Authors Published Books in Same Year, Different Publishers",
-        "Average Retail Price of eBooks vs Physical Books",
-        "Books with Ratings Far from Average (Outliers)",
-        "Publisher with Highest Average Rating (Min 10 Books)"
-    ]
+    st.markdown("""
+        <style>
+        .query-card {
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        .query-card:hover {
+            background-color: #d9f8d9;
+            transform: scale(1.02);
+            border-color: #3E8E41;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # Radio button to select the query
-    selected_query = st.radio("Select a Query", query_options)
 
-    # Define the SQL queries
+    query_chart_map = {
+    "Check Availability of eBooks vs Physical Books": lambda df: px.pie(df, names='book_type', values='count', title='eBook vs Physical Book Availability'),
+    "Find the Publisher with the Most Books Published": lambda df: px.bar(df, x='publisher', y='num_books', title='Publishers with Most Books Published'),
+    "Get the Top 5 Most Expensive Books by Retail Price": lambda df: px.pie(df, names='book_title', values='amount_retailprice', title='Top 5 Most Expensive Books by Retail Price', hole=0.4),
+    "Find the Average Page Count for Each Category": lambda df: px.box(df, x='categories', y='avg_page_count', title='Average Page Count for Each Category'),
+    "Books with Ratings Count Greater Than the Average": lambda df: px.scatter(df, x='book_title', y='ratingscount', title='Books with Ratings Count Greater Than the Average')
+}
+
     queries = {
-        "Check Availability of eBooks vs Physical Books": """
-            SELECT 
-                CASE WHEN isEbook = 1 THEN 'eBooks' ELSE 'Physical Books' END AS book_type, 
-                COUNT(*) AS count 
-            FROM books 
-            GROUP BY isEbook;
-        """,
-        "Find the Publisher with the Most Books Published": """
-            SELECT 
-                book_authors AS publisher, 
-                COUNT(*) AS num_books 
-            FROM books 
-            GROUP BY book_authors 
-            ORDER BY num_books DESC 
-            LIMIT 10;
-        """,
-        "Identify the Publisher with the Highest Average Rating": """
-            SELECT 
-                book_authors AS publisher, 
-                AVG(averageRating) AS avg_rating 
-            FROM books 
-            WHERE averageRating IS NOT NULL 
-            GROUP BY book_authors 
-            ORDER BY avg_rating DESC 
-            LIMIT 10;
-        """,
-        "Get the Top 5 Most Expensive Books by Retail Price": """
-            SELECT 
-                book_title, 
-                amount_retailPrice, 
-                currencyCode_retailPrice 
-            FROM books 
-            WHERE amount_retailPrice IS NOT NULL 
-            ORDER BY amount_retailPrice DESC 
-            LIMIT 5;
-        """,
-        "Find Books Published After 2010 with at Least 500 Pages": """
-            SELECT 
-                book_title, 
-                pageCount, 
-                year 
-            FROM books 
-            WHERE year >= '2010' AND pageCount >= 500;
-        """,
-        "List Books with Discounts Greater than 20%": """
-            SELECT 
-                book_title, 
-                amount_listPrice, 
-                amount_retailPrice, 
-                100 - (amount_retailPrice * 100.0 / amount_listPrice) AS discount_percentage 
-            FROM books 
-            WHERE amount_listPrice > 0 
-                AND amount_retailPrice > 0 
-                AND (100 - (amount_retailPrice * 100.0 / amount_listPrice)) > 20;
-        """,
-        "Find the Average Page Count for eBooks vs Physical Books": """
-            SELECT 
-                CASE WHEN isEbook = 1 THEN 'eBooks' ELSE 'Physical Books' END AS book_type, 
-                AVG(pageCount) AS avg_page_count 
-            FROM books 
-            WHERE pageCount IS NOT NULL 
-            GROUP BY isEbook;
-        """,
-        "Find the Top 3 Authors with the Most Books": """
-            SELECT 
-                book_authors, 
-                COUNT(*) AS num_books 
-            FROM books 
-            GROUP BY book_authors 
-            ORDER BY num_books DESC 
-            LIMIT 3;
-        """,
-        "List Publishers with More than 10 Books": """
-            SELECT 
-                book_authors AS publisher, 
-                COUNT(*) AS num_books 
-            FROM books 
-            GROUP BY book_authors 
-            HAVING num_books > 10;
-        """,
-        "Find the Average Page Count for Each Category": """
-            SELECT 
-                categories, 
-                AVG(pageCount) AS avg_page_count 
-            FROM books 
-            WHERE categories IS NOT NULL AND pageCount IS NOT NULL 
-            GROUP BY categories 
-            ORDER BY avg_page_count DESC;
-        """,
-        "Retrieve Books with More than 3 Authors": """
-            SELECT 
-                book_title, 
-                book_authors 
-            FROM books 
-            WHERE LENGTH(book_authors) - LENGTH(REPLACE(book_authors, ',', '')) + 1 > 3;
-        """,
-        "Books with Ratings Count Greater Than the Average": """
-            SELECT 
-                book_title, 
-                ratingsCount 
-            FROM books 
-            WHERE ratingsCount > (SELECT AVG(ratingsCount) FROM books);
-        """,
-        "Books with the Same Author Published in the Same Year": """
-            SELECT 
-                book_authors, 
-                year, 
-                COUNT(*) AS num_books 
-            FROM books 
-            WHERE book_authors IS NOT NULL AND year IS NOT NULL 
-            GROUP BY book_authors, year 
-            HAVING num_books > 1;
-        """,
-        "Books with a Specific Keyword in the Title": """
-            SELECT 
-                book_title 
-            FROM books 
-            WHERE book_title LIKE '%<keyword>%';
-        """,
-        "Year with the Highest Average Book Price": """
-            SELECT 
-                SUBSTR(year, 1, 4) AS publication_year, 
-                AVG(amount_retailPrice) AS avg_price 
-            FROM books 
-            WHERE year IS NOT NULL 
-            GROUP BY publication_year 
-            ORDER BY avg_price DESC 
-            LIMIT 1;
-        """,
-        "Count Authors Who Published 3 Consecutive Years": """
-            SELECT 
-                book_authors, 
-                COUNT(DISTINCT SUBSTR(year, 1, 4)) AS consecutive_years 
-            FROM books 
-            WHERE year IS NOT NULL 
-            GROUP BY book_authors 
-            HAVING consecutive_years >= 3;
-        """,
-        "Authors Published Books in Same Year, Different Publishers": """
-            SELECT 
-                book_authors, 
-                SUBSTR(year, 1, 4) AS publication_year, 
-                COUNT(DISTINCT book_authors) AS num_publishers 
-            FROM books 
-            GROUP BY book_authors, publication_year 
-            HAVING num_publishers > 1;
-        """,
-        "Average Retail Price of eBooks vs Physical Books": """
-            SELECT 
-                AVG(CASE WHEN isEbook = 1 THEN amount_retailPrice END) AS avg_ebook_price, 
-                AVG(CASE WHEN isEbook = 0 THEN amount_retailPrice END) AS avg_physical_price 
-            FROM books;
-        """,
-        "Books with Ratings Far from Average (Outliers)": """
-            SELECT 
-                book_title, averageRating, ratingsCount 
-            FROM books 
-            WHERE ABS(averageRating - (SELECT AVG(averageRating) FROM books)) > 
-            (2 * (SELECT SUM((averageRating - (SELECT AVG(averageRating) FROM books)) * 
-            (averageRating - (SELECT AVG(averageRating) FROM books))) 
-          / COUNT(averageRating) 
+    "Check Availability of eBooks vs Physical Books": """
+        SELECT 
+            CASE WHEN IsEbook = 1 THEN 'eBooks' ELSE 'Physical Books' END AS Book_Type, 
+            COUNT(*) AS Count 
+        FROM Books 
+        GROUP BY IsEbook;
+    """,
+    "Find the Publisher with the Most Books Published": """
+        SELECT 
+            Book_Authors AS Publisher, 
+            COUNT(*) AS Num_Books 
+        FROM Books 
+        WHERE Book_Authors IS NOT NULL AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors 
+        ORDER BY Num_Books DESC 
+        LIMIT 10;
+    """,
+    "Identify the Publisher with the Highest Average Rating": """
+        SELECT 
+            Book_Authors AS Publisher, 
+            AVG(AverageRating) AS Avg_Rating 
+        FROM Books 
+        WHERE AverageRating IS NOT NULL 
+            AND Book_Authors IS NOT NULL 
+            AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors 
+        ORDER BY Avg_Rating DESC 
+        LIMIT 10;
+    """,
+    "Get the Top 5 Most Expensive Books by Retail Price": """
+        SELECT 
+            Book_Title AS Book_Title, 
+            Amount_RetailPrice AS  Amount_RetailPrice , 
+            CurrencyCode_RetailPrice  as CurrencyCode_RetailPrice
+        FROM Books 
+        WHERE Amount_RetailPrice IS NOT NULL 
+        ORDER BY Amount_RetailPrice DESC 
+        LIMIT 5;
+    """,
+    "Find Books Published After 2010 with at Least 500 Pages": """
+        SELECT 
+            Book_Title as Book_Title, 
+            PageCount as PageCount, 
+            Year as Year 
+        FROM books 
+        WHERE Year >= '2010' AND PageCount >= 500;
+    """,
+    "List Books with Discounts Greater than 20%": """
+        SELECT 
+            Book_Title as Book_Title, 
+            Amount_ListPrice as Amount_ListPrice, 
+            Amount_RetailPrice as  Amount_RetailPrice, 
+            100 - (Amount_RetailPrice * 100.0 / Amount_ListPrice) AS Discount_Percentage 
+        FROM books 
+        WHERE Amount_ListPrice > 0 
+            AND Amount_RetailPrice > 0 
+            AND (100 - (Amount_RetailPrice * 100.0 / Amount_ListPrice)) > 20;
+    """,
+    "Find the Average Page Count for eBooks vs Physical Books": """
+        SELECT 
+            CASE WHEN IsEbook = 1 THEN 'eBooks' ELSE 'Physical Books' END AS Book_Type, 
+            AVG(PageCount) AS Avg_Page_Count 
+        FROM books 
+        WHERE PageCount IS NOT NULL 
+        GROUP BY IsEbook;
+    """,
+    "Find the Top 3 Authors with the Most Books": """
+        SELECT 
+            Book_Authors as Book_Authors , 
+            COUNT(*) AS Num_Books 
+        FROM books 
+        WHERE Book_Authors IS NOT NULL AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors 
+        ORDER BY Num_Books DESC 
+        LIMIT 3;
+    """,
+    "List Publishers with More than 10 Books": """
+        SELECT 
+            Book_Authors AS Publisher, 
+            COUNT(*) AS Num_Books 
+        FROM books 
+        WHERE Book_Authors IS NOT NULL AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors 
+        HAVING Num_Books > 10;
+    """,
+    "Find the Average Page Count for Each Category": """
+        SELECT 
+            Categories as Categories, 
+            AVG(PageCount) AS Avg_Page_Count 
+        FROM books 
+        WHERE Categories IS NOT NULL AND PageCount IS NOT NULL 
+        GROUP BY Categories 
+        ORDER BY Avg_Page_Count DESC;
+    """,
+    "Retrieve Books with More than 3 Authors": """
+        SELECT 
+            Book_Title as Book_Title, 
+            Book_Authors as Book_Authors 
+        FROM books 
+        WHERE LENGTH(Book_Authors) - LENGTH(REPLACE(Book_Authors, ',', '')) + 1 > 3;
+    """,
+    "Books with Ratings Count Greater Than the Average": """
+        SELECT 
+            Book_Title as Book_Title, 
+            RatingsCount as RatingsCount    
+        FROM books 
+        WHERE RatingsCount > (SELECT AVG(RatingsCount) FROM books);
+    """,
+    "Books with the Same Author Published in the Same Year": """
+        SELECT 
+            Book_Authors as Book_Author, 
+            Year as Year, 
+            COUNT(*) AS Num_Books 
+        FROM books 
+        WHERE Book_Authors IS NOT NULL AND Year IS NOT NULL AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors, Year 
+        HAVING Num_Books > 1;
+    """,
+    "Books with a Specific Keyword in the Title": """
+        SELECT 
+            Book_Title as BookTitle_SameAsKeyword
+        FROM books 
+        ;
+    """,
+    "Year with the Highest Average Book Price": """
+        SELECT 
+            SUBSTR(Year, 1, 4) AS Publication_Year, 
+            AVG(Amount_RetailPrice) AS Avg_Price 
+        FROM books 
+        WHERE Year IS NOT NULL 
+        GROUP BY Publication_Year 
+        ORDER BY Avg_Price DESC 
+        LIMIT 1;
+    """,
+    "Count Authors Who Published 3 Consecutive Years": """
+        SELECT 
+            Book_Authors as Book_Authors, 
+            COUNT(DISTINCT SUBSTR(Year, 1, 4)) AS Consecutive_Years 
+        FROM books 
+        WHERE Year IS NOT NULL 
+            AND Book_Authors IS NOT NULL 
+            AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors 
+        HAVING Consecutive_Years >= 3;
+    """,
+    "Authors Published Books in Same Year, Different Publishers": """
+        SELECT 
+            Book_Authors as Book_Authors, 
+            SUBSTR(Year, 1, 4) AS Publication_Year, 
+            COUNT(DISTINCT Book_Authors) AS Num_Publishers 
+        FROM books 
+        WHERE Book_Authors IS NOT NULL 
+        GROUP BY Book_Authors, Publication_Year 
+        HAVING Num_Publishers > 1;
+    """,
+    "Average Retail Price of eBooks vs Physical Books": """
+        SELECT 
+            AVG(CASE WHEN IsEbook = 1 THEN Amount_RetailPrice END) AS Avg_Ebook_Price, 
+            AVG(CASE WHEN IsEbook = 0 THEN Amount_RetailPrice END) AS Avg_Physical_Price 
+        FROM books;
+    """,
+    "Books with Ratings Far from Average (Outliers)": """
+        SELECT 
+            Book_Title as Book_Title , AverageRating as AverageRating, RatingsCount as RatingCount 
+        FROM books 
+        WHERE ABS(AverageRating - (SELECT AVG(AverageRating) FROM books)) > 
+        (2 * (SELECT SUM((AverageRating - (SELECT AVG(AverageRating) FROM books)) * 
+        (AverageRating - (SELECT AVG(AverageRating) FROM books))) 
+      / COUNT(AverageRating) 
        FROM books));
+    """,
+    "Publisher with Highest Average Rating (Min 10 Books)": """
+        SELECT 
+            Book_Authors AS Publisher, 
+            AVG(AverageRating) AS Avg_Rating, 
+            COUNT(*) AS Num_Books 
+        FROM books 
+        WHERE AverageRating IS NOT NULL 
+            AND Book_Authors IS NOT NULL 
+            AND TRIM(Book_Authors) != ''  -- Ensuring non-null, non-empty authors
+        GROUP BY Book_Authors 
+        HAVING Num_Books > 10 
+        ORDER BY Avg_Rating DESC 
+        LIMIT 1;
+    """
+}
 
-        """,
-        "Publisher with Highest Average Rating (Min 10 Books)": """
-            SELECT 
-                book_authors AS publisher, 
-                AVG(averageRating) AS avg_rating, 
-                COUNT(*) AS num_books 
-            FROM books 
-            WHERE averageRating IS NOT NULL 
-            GROUP BY book_authors 
-            HAVING num_books > 10 
-            ORDER BY avg_rating DESC 
-            LIMIT 1;
-        """
-    }
-
-    # Display query results for the selected query
-    if selected_query:
-        query = queries[selected_query]
+    for query_name, sql_query in queries.items():
+       if st.button(query_name):
         try:
-            conn = sqlite3.connect(DB_FILEPATH)
-            result_df = pd.read_sql_query(query, conn)
-            conn.close()
+            with sqlite3.connect(DB_FILEPATH) as conn:
+                result_df = pd.read_sql_query(sql_query, conn)
 
+            # Check if the query returned results
             if not result_df.empty:
-                st.write(f"Results for: {selected_query}")
+                result_df.index = result_df.index + 1  # Adjusting index to start from 1
+                st.write(f"**Results for: {query_name}**")
                 st.dataframe(result_df)
+                result_df.columns = result_df.columns.str.lower()  # Converts all column names to lowercase
+
+
+                # Use the query_chart_map to get the appropriate chart(s)
+                if query_name in query_chart_map:
+                    charts = query_chart_map[query_name](result_df)
+                    if isinstance(charts, list):
+                        for chart in charts:
+                            st.plotly_chart(chart)
+                    else:
+                        st.plotly_chart(charts)
             else:
-                st.warning("No results found for the selected query.")
+                st.warning("No results found for this query.")
         except Exception as e:
             st.error(f"Error executing query: {e}")
