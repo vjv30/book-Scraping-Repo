@@ -17,6 +17,7 @@ Make sure you have the following Python libraries installed:
 - `sqlite3`: For interacting with the SQLite database.
 - `pandas`: For data manipulation and analysis.
 - `streamlit`: For building the web interface.
+- `seaborn , matplotlib` : For visualization
 
 You can install the required libraries by running:
 
